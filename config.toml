@@ -1,0 +1,32 @@
+[ml]
+model = "decision_tree"
+features = ["tos", "window", "frame_size", "ipi"]
+
+# Optional model parameters
+[ml.parameters]
+max_depth = 10
+
+
+
+[provision]
+links = [
+	["s1", "h1"],
+	["s1", "h2"],
+]
+
+[[provision.nodes]]
+name = "s1"
+type = "switch"
+
+[[provision.nodes]]
+name = "h1"
+type = "docker"
+dimage = "client"
+ip = "10.0.0.1"
+
+[[provision.nodes]]
+name = "h2"
+type = "docker"
+dimage = "server"
+ip = "10.0.0.2"
+
