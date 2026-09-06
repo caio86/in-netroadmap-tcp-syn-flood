@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	iputils-ping \
 	libboost-iostreams-dev \
 	libboost-graph-dev \
-	libgc1 \
+	libgc1c2 \
 	libgmp10 \
 	build-essential \
 	&& rm -rf /var/lib/apt/lists/*

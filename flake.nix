@@ -32,8 +32,6 @@
           shellHook = ''
             test -d .venv || ${pkgs.python3.interpreter} -m venv .venv
             source .venv/bin/activate
-
-            pip install -e git+https://github.com/ifpb/In-NetRoadmap#egg=inetrm
           '';
         };
       });

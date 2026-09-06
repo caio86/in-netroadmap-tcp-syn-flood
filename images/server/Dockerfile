@@ -14,11 +14,10 @@ RUN apt-get update && apt-get install -y \
     vsftpd \
     xmlstarlet \
     ffmpeg \
+    tcpdump \
     unzip \
     ethtool \
     && rm -rf /var/lib/apt/lists/*
-
-COPY scripts /scripts
 
 COPY vsftpd.conf /etc/vsftpd.conf
 RUN mkdir -p /ftp
@@ -36,5 +35,7 @@ RUN rm BigBuckBunny.mp4.zip
 
 RUN ffmpeg -i BigBuckBunny.mp4 -map 0 -map 0 -c:a aac -c:v libx264 -b:v:0 800k -s:v:0 640x360 -adaptation_sets "id=0,streams=v id=1,streams=a" -preset veryfast -f dash video.mpd
 EXPOSE 80 5000
+
+COPY scripts /scripts
 
 CMD nginx -g 'daemon off;'

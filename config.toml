@@ -1,5 +1,5 @@
 [ml]
-model = "decision_tree"
+model = "xgboost_binary"
 features = ["tos", "window", "frame_size", "ipi"]
 
 # Optional model parameters
@@ -12,6 +12,7 @@ max_depth = 10
 links = [
 	["s1", "h1"],
 	["s1", "h2"],
+	["s1", "h3"],
 ]
 
 [[provision.nodes]]
@@ -30,3 +31,8 @@ type = "docker"
 dimage = "server"
 ip = "10.0.0.2"
 
+[[provision.nodes]]
+name = "h3"
+type = "docker"
+dimage = "attacker"
+ip = "10.0.0.3"

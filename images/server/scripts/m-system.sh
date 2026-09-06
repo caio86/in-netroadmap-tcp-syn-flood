@@ -38,10 +38,10 @@ run_monitoring() {
 
     echo "[Wrapper] Starting CPU and Memory metrics collection..."
 
-    $SCRIPT_DIR/server/get_cpu.sh &
+    $SCRIPT_DIR/system/get_cpu.sh &
     CPU_PID=$!
     
-    $SCRIPT_DIR/server/get_memory.sh &
+    $SCRIPT_DIR/system/get_memory.sh &
     MEM_PID=$!
 
     echo "[Wrapper] Monitors running in background (CPU PID: $CPU_PID | MEM PID: $MEM_PID)"
