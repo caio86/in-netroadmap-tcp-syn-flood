@@ -16,8 +16,12 @@ def create_nodes(net):
     
     nodes_dict['s1'] = net.addSwitch('s1', cls=OVSSwitch)
     nodes_dict['h1'] = net.addDocker('h1', dimage='inetrm-client', ip='10.0.0.1', network_mode='none', volumes=["/tmp:/tmp"])
-    nodes_dict['h2'] = net.addDocker('h2', dimage='inetrm-server', ip='10.0.0.2', network_mode='none', volumes=["/tmp:/tmp"])
-    nodes_dict['h3'] = net.addDocker('h3', dimage='inetrm-attacker', ip='10.0.0.3', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['h2'] = net.addDocker('h2', dimage='inetrm-client', ip='10.0.0.2', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['h3'] = net.addDocker('h3', dimage='inetrm-client', ip='10.0.0.3', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['h4'] = net.addDocker('h4', dimage='inetrm-client', ip='10.0.0.4', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['srv'] = net.addDocker('srv', dimage='inetrm-server', ip='10.0.0.254', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['a1'] = net.addDocker('a1', dimage='inetrm-attacker', ip='10.0.0.11', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['a2'] = net.addDocker('a2', dimage='inetrm-attacker', ip='10.0.0.12', network_mode='none', volumes=["/tmp:/tmp"])
 
     return nodes_dict
 
@@ -26,6 +30,10 @@ def create_links(net, nodes_dict):
     net.addLink(nodes_dict['s1'], nodes_dict['h1'])
     net.addLink(nodes_dict['s1'], nodes_dict['h2'])
     net.addLink(nodes_dict['s1'], nodes_dict['h3'])
+    net.addLink(nodes_dict['s1'], nodes_dict['h4'])
+    net.addLink(nodes_dict['s1'], nodes_dict['srv'])
+    net.addLink(nodes_dict['s1'], nodes_dict['a1'])
+    net.addLink(nodes_dict['s1'], nodes_dict['a2'])
 
 def post_init(nodes_dict):
     info('*** Compiling P4, starting simple_switch in BMv2 nodes and orchestrating via custom scripts\n')

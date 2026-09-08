@@ -13,6 +13,10 @@ links = [
 	["s1", "h1"],
 	["s1", "h2"],
 	["s1", "h3"],
+	["s1", "h4"],
+	["s1", "srv"],
+	["s1", "a1"],
+	["s1", "a2"],
 ]
 
 [[provision.nodes]]
@@ -28,11 +32,35 @@ ip = "10.0.0.1"
 [[provision.nodes]]
 name = "h2"
 type = "docker"
-dimage = "server"
+dimage = "client"
 ip = "10.0.0.2"
 
 [[provision.nodes]]
 name = "h3"
 type = "docker"
-dimage = "attacker"
+dimage = "client"
 ip = "10.0.0.3"
+
+[[provision.nodes]]
+name = "h4"
+type = "docker"
+dimage = "client"
+ip = "10.0.0.4"
+
+[[provision.nodes]]
+name = "srv"
+type = "docker"
+dimage = "server"
+ip = "10.0.0.254"
+
+[[provision.nodes]]
+name = "a1"
+type = "docker"
+dimage = "attacker"
+ip = "10.0.0.11"
+
+[[provision.nodes]]
+name = "a2"
+type = "docker"
+dimage = "attacker"
+ip = "10.0.0.12"

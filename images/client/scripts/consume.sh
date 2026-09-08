@@ -9,10 +9,12 @@ FTP_USER="anonymous"
 FTP_PASS="anonymous"
 FILE_URL="ftp://$SERVER/JihanGrandTheater.jpg"
 
+
+HOSTNAME=$(hostname)
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_DIR="/tmp"
+LOG_DIR="${LOG_DIR:-/tmp}"
 STREAM_LOG="$LOG_DIR/vlc-$TIMESTAMP.log"
-WEB_LOG="$LOG_DIR/web-$TIMESTAMP.csv"
+WEB_LOG="$LOG_DIR/web-$TIMESTAMP-$HOSTNAME.csv"
 FILE_LOG="$LOG_DIR/file-$TIMESTAMP.csv"
 IPERF_LOG="$LOG_DIR/iperf-$TIMESTAMP.json"
 
