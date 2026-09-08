@@ -41,8 +41,8 @@ def orchestrate(nodes_dict, duration):
     a1.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a1-eth0 --ipi 0 2>/tmp/attacker.err >/tmp/attacker.log &")
     a2.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a2-eth0 --ipi 0 &")
 
-    # sleep(duration*0.8)
+    sleep(duration*0.8)
 
-    # h1.cmd(f"")
+    h1.cmd(f"python3 /scripts/plot.py --logdir /tmp/web-{ts} --attacker-log /tmp/attacker.log --out /tmp/web-{ts}/results.png 2>/tmp/plot.err >/tmp/plot.log")
 
     return
