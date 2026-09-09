@@ -14,7 +14,7 @@ def create_nodes(net):
 
     info('*** Adding Network Nodes (Switches and Docker Containers)\n')
     
-    nodes_dict['s1'] = net.addDocker('s1', dimage='inetrm-bmv2', network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['s1'] = net.addDocker('s1', dimage='inetrm-bmv2', ip="10.0.0.253", network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h1'] = net.addDocker('h1', dimage='inetrm-client', ip='10.0.0.1', mac="00:00:00:00:00:01", network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h2'] = net.addDocker('h2', dimage='inetrm-client', ip='10.0.0.2', mac="00:00:00:00:00:02", network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h3'] = net.addDocker('h3', dimage='inetrm-client', ip='10.0.0.3', mac="00:00:00:00:00:03", network_mode='none', volumes=["/tmp:/tmp"])
@@ -27,13 +27,13 @@ def create_nodes(net):
 
 def create_links(net, nodes_dict):
     info('*** Linking topology\n')
-    net.addLink(nodes_dict['s1'], nodes_dict['h1'])
-    net.addLink(nodes_dict['s1'], nodes_dict['h2'])
-    net.addLink(nodes_dict['s1'], nodes_dict['h3'])
-    net.addLink(nodes_dict['s1'], nodes_dict['h4'])
-    net.addLink(nodes_dict['s1'], nodes_dict['srv'])
-    net.addLink(nodes_dict['s1'], nodes_dict['a1'])
-    net.addLink(nodes_dict['s1'], nodes_dict['a2'])
+    net.addLink(nodes_dict['s1'], nodes_dict['h1'], addr1="00:00:01:00:00:01")
+    net.addLink(nodes_dict['s1'], nodes_dict['h2'], addr1="00:00:01:00:00:02")
+    net.addLink(nodes_dict['s1'], nodes_dict['h3'], addr1="00:00:01:00:00:03")
+    net.addLink(nodes_dict['s1'], nodes_dict['h4'], addr1="00:00:01:00:00:04")
+    net.addLink(nodes_dict['s1'], nodes_dict['srv'], addr1="00:00:01:00:02:54")
+    net.addLink(nodes_dict['s1'], nodes_dict['a1'], addr1="00:00:01:00:00:11")
+    net.addLink(nodes_dict['s1'], nodes_dict['a2'], addr1="00:00:01:00:00:12")
 
 def post_init(nodes_dict):
     info('*** Compiling P4, starting simple_switch in BMv2 nodes and orchestrating via custom scripts\n')
