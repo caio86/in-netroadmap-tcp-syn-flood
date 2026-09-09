@@ -1,5 +1,5 @@
 [ml]
-model = "xgboost_binary"
+model = "decision_tree"
 features = ["tos", "window", "frame_size", "ipi"]
 
 # Optional model parameters
@@ -19,9 +19,14 @@ links = [
 	["s1", "a2"],
 ]
 
+#[[provision.nodes]]
+#name = "s1"
+#type = "switch"
+
 [[provision.nodes]]
 name = "s1"
-type = "switch"
+type = "bmv2"
+source = "decision_tree"
 
 [[provision.nodes]]
 name = "h1"

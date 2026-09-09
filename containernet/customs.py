@@ -10,6 +10,10 @@ def orchestrate(nodes_dict, duration):
     h1, h2, h3, h4 = nodes_dict['h1'], nodes_dict['h2'], nodes_dict['h3'], nodes_dict['h4']
     srv = nodes_dict['srv']
     a1, a2 = nodes_dict['a1'], nodes_dict['a2']
+    s1 = nodes_dict['s1']
+
+    s1.cmd("cat /tmp/compile/ipv4lpm.txt | simple_switch_CLI")
+    s1.cmd("cat /tmp/compile/table.txt | simple_switch_CLI")
 
     h1.cmd("ethtool -K h1-eth0 tx off rx off")
     h2.cmd("ethtool -K h2-eth0 tx off rx off")
