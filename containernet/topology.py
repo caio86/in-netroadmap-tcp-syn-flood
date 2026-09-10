@@ -14,7 +14,7 @@ def create_nodes(net):
 
     info('*** Adding Network Nodes (Switches and Docker Containers)\n')
     
-    nodes_dict['s1'] = net.addDocker('s1', dimage='inetrm-bmv2', ip="10.0.0.253", network_mode='none', volumes=["/tmp:/tmp"])
+    nodes_dict['s1'] = net.addDocker('s1', dimage='inetrm-bmv2', ip=None, network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h1'] = net.addDocker('h1', dimage='inetrm-client', ip='10.0.0.1', mac="00:00:00:00:00:01", network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h2'] = net.addDocker('h2', dimage='inetrm-client', ip='10.0.0.2', mac="00:00:00:00:00:02", network_mode='none', volumes=["/tmp:/tmp"])
     nodes_dict['h3'] = net.addDocker('h3', dimage='inetrm-client', ip='10.0.0.3', mac="00:00:00:00:00:03", network_mode='none', volumes=["/tmp:/tmp"])
@@ -51,7 +51,22 @@ def post_init(nodes_dict):
     if_args = " ".join([f"-i {idx}@{intf}" for idx, intf in enumerate(interfaces)])
     
     info('--> Starting simple_switch for s1...\n')
+    bmv2_node.cmd("ip link set s1-eth0 up")
+    bmv2_node.cmd("ip link set s1-eth1 up")
+    bmv2_node.cmd("ip link set s1-eth2 up")
+    bmv2_node.cmd("ip link set s1-eth3 up")
+    bmv2_node.cmd("ip link set s1-eth4 up")
+    bmv2_node.cmd("ip link set s1-eth5 up")
+    bmv2_node.cmd("ip link set s1-eth6 up")
     bmv2_node.cmd(f'simple_switch {if_args} {json_output} &')
+    # bmv2_node.cmd(
+    #     f'simple_switch '
+    #     f'--log-console '
+    #     f'--log-level trace '
+    #     f'{if_args} '
+    #     f'{json_output} '
+    #     f'> /tmp/bmv2.log 2>&1 &'
+    # )
     
 
     orchestrate(nodes_dict, duration)
