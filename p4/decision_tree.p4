@@ -94,13 +94,13 @@ struct metadata {
     ingress_metadata_t   ingress_metadata;
     parser_metadata_t   parser_metadata;
     flowID_t flowID;
-    bit<8> diffserv;
-    bit<14> action_select1;
     bit<16> window;
-    bit<14> action_select2;
+    bit<14> action_select1;
     bit<32> frame_size;
-    bit<14> action_select3;
+    bit<14> action_select2;
     bit<48> ipi;
+    bit<14> action_select3;
+    bit<8> diffserv;
     bit<14> action_select4;
     bit<3>  result;
 }
@@ -220,7 +220,7 @@ control MyIngress(inout headers hdr,
 
     table feature1_exact {
         key = {
-            meta.diffserv: range ;
+            meta.window: range ;
         }
         actions = {
             NoAction;
@@ -234,7 +234,7 @@ control MyIngress(inout headers hdr,
 
     table feature2_exact {
         key = {
-            meta.window: range ;
+            meta.frame_size: range ;
         }
         actions = {
             NoAction;
@@ -248,7 +248,7 @@ control MyIngress(inout headers hdr,
 
     table feature3_exact {
         key = {
-            meta.frame_size: range ;
+            meta.ipi: range ;
         }
         actions = {
             NoAction;
@@ -262,7 +262,7 @@ control MyIngress(inout headers hdr,
 
     table feature4_exact {
         key = {
-            meta.ipi: range ;
+            meta.diffserv: range ;
         }
         actions = {
             NoAction;
@@ -290,7 +290,6 @@ control MyIngress(inout headers hdr,
     }
 
     action extract_features() {
-        meta.diffserv = hdr.ipv4.diffserv;
         meta.window = hdr.tcp.window;
         meta.frame_size = standard_metadata.packet_length;
         timestamp_t ipi = 0;
@@ -314,6 +313,7 @@ control MyIngress(inout headers hdr,
         lpt_register.write((bit<32>)meta.flowID, last_packet_time);
 
         meta.ipi = ipi;
+        meta.diffserv = hdr.ipv4.diffserv;
     }
 
     action ipv4_forward(macAddr_v dstAddr, egressSpec_v port) {
@@ -338,9 +338,9 @@ control MyIngress(inout headers hdr,
 
     apply {
         meta.flowID = 0;
-	meta.result = 0;
+        meta.result = 0;
         if (hdr.ipv4.isValid()) {
-            if (hdr.tcp.isValid() && !hdr.nodeCount.isValid() && hdr.tcp.srcPort != 5201 && hdr.tcp.dstPort != 5201) {
+            if (hdr.tcp.isValid() && !hdr.nodeCount.isValid()) {
                 find_flowID_ipv4();
                 extract_features();
 
@@ -353,12 +353,11 @@ control MyIngress(inout headers hdr,
                 resultCounter.count((bit<32>)meta.result);
             }
 
-	    //if (meta.result == 1) {
-	    //    drop();
-	    //} else {
-            //	ipv4_lpm.apply();
-	    //}
-            ipv4_lpm.apply();
+            if (meta.result == 1) {
+                drop();
+            } else {
+                ipv4_lpm.apply();
+            }
         }
     }
 }
