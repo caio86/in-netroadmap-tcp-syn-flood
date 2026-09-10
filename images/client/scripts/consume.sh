@@ -23,7 +23,7 @@ consume_web() {
     while true; do
         ts=$(date +%s.%3N)
         curl -so /dev/null "$WEB_URL" \
-            --connect-timeout 2 --max-time 5 \
+            --connect-timeout 1 --max-time 1 \
             -w "$ts,%{http_code},%{time_total}\n" >> "$WEB_LOG" || true
         sleep 1
     done

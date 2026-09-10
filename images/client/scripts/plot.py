@@ -57,6 +57,9 @@ def load_attack_events(path):
 
 
 def plot(client_data, attack_events, out_path, title):
+    for df in client_data.values():
+        df['time_total'] = df['time_total'] * 1000
+
     t0 = min(df["timestamp"].min() for df in client_data.values())
 
     fig, ax = plt.subplots(figsize=(11, 6))
@@ -80,7 +83,7 @@ def plot(client_data, attack_events, out_path, title):
         ax.axvline(rel_ts, color="black", linestyle="--", linewidth=1.5)
 
     ax.set_xlabel("Time since experiment start (s)")
-    ax.set_ylabel("Request latency (s)")
+    ax.set_ylabel("Request latency (ms)")
     ax.set_title(title)
     ax.grid(True, alpha=0.3)
 
