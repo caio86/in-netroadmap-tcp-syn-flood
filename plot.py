@@ -35,7 +35,15 @@ def load_client_csv(path):
     version -- either way the data rows themselves have 3 fields.
     """
     df = pd.read_csv(path, skiprows=1, names=["timestamp", "http_status", "time_total"])
-    return df.sort_values("timestamp").reset_index(drop=True)
+    df.sort_values("timestamp").reset_index(drop=True)
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s")
+    df = df.set_index("timestamp")
+    df = df.resample("1s").mean()
+    df = df.dropna()
+
+    return df
+
 
 
 def hostname_from_path(path):
@@ -56,7 +64,42 @@ def load_attack_events(path):
     return events
 
 
+def plot2(client_data, attack_events, out_path, title):
+    for df in client_data.values():
+        df['time_total'] = df['time_total'] * 1000
+
+    t0 = min(df["timestamp"].min() for df in client_data.values())
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+
+
+    for label, ts in attack_events.items():
+        rel_ts = ts - t0
+        ax.axvline(rel_ts, color="black", linestyle="--", linewidth=1.5)
+
+    ax.set_xlabel("Time since experiment start (s)")
+    ax.set_ylabel("Request latency (ms)")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+
+    # Add event text labels after autoscaling so they sit at the top of the
+    # final y-range instead of an intermediate one.
+    ylim = ax.get_ylim()
+    for label, ts in attack_events.items():
+        rel_ts = ts - t0
+        ax.text(rel_ts, ylim[1] * 0.97, f" {label}", rotation=90,
+                va="top", ha="left", fontsize=9)
+
+    ax.legend(loc="upper left", fontsize=8, ncol=2)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    print(f"Saved plot to {out_path}")
+
+
 def plot(client_data, attack_events, out_path, title):
+    for df in client_data.values():
+        df['time_total'] = df['time_total'] * 1000
+
     t0 = min(df["timestamp"].min() for df in client_data.values())
 
     fig, ax = plt.subplots(figsize=(11, 6))
@@ -80,7 +123,7 @@ def plot(client_data, attack_events, out_path, title):
         ax.axvline(rel_ts, color="black", linestyle="--", linewidth=1.5)
 
     ax.set_xlabel("Time since experiment start (s)")
-    ax.set_ylabel("Request latency (s)")
+    ax.set_ylabel("Request latency (ms)")
     ax.set_title(title)
     ax.grid(True, alpha=0.3)
 
@@ -111,10 +154,21 @@ def main():
     if not csv_paths:
         raise SystemExit(f"No files matched {args.pattern} in {args.logdir}")
 
-    client_data = {hostname_from_path(p): load_client_csv(p) for p in csv_paths}
+    client_data = [ load_client_csv(p) for p in csv_paths]
     attack_events = load_attack_events(args.attacker_log)
 
-    plot(client_data, attack_events, args.out, args.title)
+    combined = pd.concat(client_data, axis=1, sort=True)["time_total"].mean(axis=1)
+
+    combined.plot(figsize=(12,6))
+
+    plt.xlabel("Time")
+    plt.ylabel("Mean latency (ms)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("/tmp/teste.png")
+
+
+    # plot2(client_data, attack_events, args.out, args.title)
 
 
 if __name__ == "__main__":
