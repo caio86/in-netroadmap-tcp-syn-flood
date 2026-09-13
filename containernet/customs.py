@@ -110,8 +110,11 @@ def orchestrate(nodes_dict, duration):
 
     sleep(duration*0.2)
 
-    a1.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a1-eth0 --ipi 0 2>/tmp/attacker.err >/tmp/attacker.log &")
-    a2.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a2-eth0 --ipi 0 &")
+    a1_pps = 2000
+    a2_pps = 2000
+
+    a1.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a1-eth0 --pps {a1_pps} 2>/tmp/attacker.err >/tmp/attacker.log &")
+    a2.cmd(f"python3 /scripts/synflood.py --duration {duration} --target 10.0.0.254 --iface a2-eth0 --pps {a2_pps} &")
 
     sleep(duration*0.8)
 
