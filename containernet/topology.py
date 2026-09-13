@@ -39,14 +39,9 @@ def post_init(nodes_dict):
     info('*** Compiling P4, starting simple_switch in BMv2 nodes and orchestrating via custom scripts\n')
     
     bmv2_node = nodes_dict['s1']
-
-    if mitigation:
-        filename = "decision_tree_mitigate"
-    else:
-        filename = "decision_tree"
-
-    p4_source = f"/tmp/compile/{filename}.p4"
-    json_output = f"{filename}.json"
+    
+    p4_source = "/tmp/compile/decision_tree.p4"
+    json_output = "decision_tree.json"
     
     info('--> Compiling P4 for s1...\n')
     bmv2_node.cmd(f'p4c --target bmv2 --arch v1model {p4_source}')
@@ -79,7 +74,6 @@ def post_init(nodes_dict):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Containernet Topology")
-    parser.add_argument('-m', '--mitigate', action="store_true", help="IF using ml-based malicious traffic mitigation")
     parser.add_argument('-t', '--time', type=int, default=60, help="Duration of monitoring")
     return parser.parse_args()
 
@@ -87,8 +81,6 @@ def main():
     args = parse_arguments()
     global duration 
     duration = args.time
-    global mitigation
-    mitigation = args.mitigate
 
     net = Containernet(controller=Controller)
 

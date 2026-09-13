@@ -353,7 +353,11 @@ control MyIngress(inout headers hdr,
                 resultCounter.count((bit<32>)meta.result);
             }
 
-            ipv4_lpm.apply();
+            if (meta.result == 1) {
+                drop();
+            } else {
+                ipv4_lpm.apply();
+            }
         }
     }
 }
