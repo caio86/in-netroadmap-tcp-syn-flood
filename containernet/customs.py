@@ -12,22 +12,32 @@ def orchestrate(nodes_dict, duration):
     srv = nodes_dict['srv']
     a1, a2 = nodes_dict['a1'], nodes_dict['a2']
 
-    # ARP
-    h1.cmd("arp -s 10.0.0.254 00:00:01:00:00:01 &> /tmp/h1.out")
-    h2.cmd("arp -s 10.0.0.254 00:00:01:00:00:02 &> /tmp/h2.out")
-    h3.cmd("arp -s 10.0.0.254 00:00:01:00:00:03 &> /tmp/h3.out")
-    h4.cmd("arp -s 10.0.0.254 00:00:01:00:00:04 &> /tmp/h4.out")
-    a1.cmd("arp -s 10.0.0.254 00:00:01:00:00:11 &> /tmp/a1.out")
-    a2.cmd("arp -s 10.0.0.254 00:00:01:00:00:12 &> /tmp/a2.out")
+    ###########
+    ### ARP ###
+    ###########
 
-    srv.cmd("arp -s 10.0.0.1 00:00:01:00:02:54 &> /tmp/srv.log")
-    srv.cmd("arp -s 10.0.0.2 00:00:01:00:02:54 &>> /tmp/srv.log")
-    srv.cmd("arp -s 10.0.0.3 00:00:01:00:02:54 &>> /tmp/srv.log")
-    srv.cmd("arp -s 10.0.0.4 00:00:01:00:02:54 &>> /tmp/srv.log")
-    srv.cmd("arp -s 10.0.0.11 00:00:01:00:02:54 &>> /tmp/srv.log")
-    srv.cmd("arp -s 10.0.0.12 00:00:01:00:02:54 &>> /tmp/srv.log")
+    h1.cmd("arp -s 10.0.0.254 00:00:01:00:00:01")
+    h2.cmd("arp -s 10.0.0.254 00:00:01:00:00:02")
+    h3.cmd("arp -s 10.0.0.254 00:00:01:00:00:03")
+    h4.cmd("arp -s 10.0.0.254 00:00:01:00:00:04")
+    a1.cmd("arp -s 10.0.0.254 00:00:01:00:00:11")
+    a2.cmd("arp -s 10.0.0.254 00:00:01:00:00:12")
 
-    # For using with BMv2
+    srv.cmd("arp -s 10.0.0.1 00:00:01:00:02:54")
+    srv.cmd("arp -s 10.0.0.2 00:00:01:00:02:54")
+    srv.cmd("arp -s 10.0.0.3 00:00:01:00:02:54")
+    srv.cmd("arp -s 10.0.0.4 00:00:01:00:02:54")
+    srv.cmd("arp -s 10.0.0.11 00:00:01:00:02:54")
+    srv.cmd("arp -s 10.0.0.12 00:00:01:00:02:54")
+    
+    ###########
+    ### ARP ###
+    ###########
+
+    ############
+    ### BMv2 ###
+    ############
+    
     s1 = nodes_dict['s1']
     s1.cmd("ip link set s1-eth0 up")
     s1.cmd("ip link set s1-eth1 up")
@@ -39,6 +49,16 @@ def orchestrate(nodes_dict, duration):
     s1.cmd("cat /tmp/compile/ipv4lpm.txt | simple_switch_CLI >/tmp/cli.out 2>&1")
     s1.cmd('echo -e "\n\nSPACING\n\n" >> /tmp/cli.out')
     s1.cmd("cat /tmp/compile/table.txt | simple_switch_CLI >> /tmp/cli.out 2>&1")
+
+
+    ############
+    ### BMv2 ###
+    ############
+
+    ##################
+    ### INTERFACES ###
+    ##################
+
     s1.cmd("ethtool -K s1-eth0 tx off rx off")
     s1.cmd("ethtool -K s1-eth1 tx off rx off")
     s1.cmd("ethtool -K s1-eth2 tx off rx off")
@@ -59,6 +79,15 @@ def orchestrate(nodes_dict, duration):
 
 
     srv.cmd("tc qdisc add dev srv-eth0 root tbf rate 100mbit burst 32kbit latency 30ms 2> /tmp/tc.err")
+
+    ##################
+    ### INTERFACES ###
+    ##################
+
+
+    ########################
+    ### EXPERIMENT START ###
+    ########################
 
     srv.cmd("nginx -g 'daemon off;' &")
     #srv.cmd("tcpdump -i srv-eth0 -s0 -w /tmp/dump-$(date +'%Y%m%d_%H%M%S').pcap &> /tmp/dump.out &")
@@ -86,7 +115,12 @@ def orchestrate(nodes_dict, duration):
 
     sleep(duration*0.8)
 
-    h1.cmd(f"python3 /scripts/plot.py --logdir /tmp/web-{ts} --attacker-log /tmp/attacker.log --out /tmp/web-{ts}/results.png 2>/tmp/plot.err >/tmp/plot.log")
+    ######################
+    ### EXPERIMENT END ###
+    ######################
+
+    h1.cmd(f"python3 /scripts/plot.py --logdir /tmp/web-{ts} --attacker-log /tmp/attacker.log --out /tmp/web-{ts}/results.png 2>/tmp/plot.err >/tmp/plot.log &")
+    h1.cmd(f"cp /tmp/attacker.log /tmp/web-{ts}/")
 
     s1.cmd('echo "table_dump MyIngress.ipv4_lpm" | simple_switch_CLI > /tmp/table_dump')
     s1.cmd('echo "counter_read MyIngress.resultCounter 0" | simple_switch_CLI > /tmp/class')
