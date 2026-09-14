@@ -62,6 +62,7 @@ def stat_per_second(df):
 
     return result
 
+
 def process(label, logdir, pattern, attacker_log):
     df = load_all_csvs(logdir, pattern)
     stats = stat_per_second(df)
@@ -75,29 +76,45 @@ def process(label, logdir, pattern, attacker_log):
     return df, stats, attack_start
 
 
-def plot_ecdf(df, df_ml, out_path="ecdf.png"):
+def plot_ecdf(df, df_ml, label, out_path="ecdf.png"):
     plt.figure(dpi=300)
-
-    df["ML Usage"] = "Without ML"
-    df_ml["ML Usage"] = "With ML"
 
     data = pd.concat([df, df_ml])
 
     sns.ecdfplot(
         data=data,
         x="time_total",
-        hue="ML Usage",
+        hue=label,
         legend="brief",
     )
 
     plt.ylabel("Proportion")
-    plt.xlabel("Request Latency (s)")
+    plt.xlabel("Request Latency (ms)")
     plt.tight_layout()
     plt.grid(alpha=0.3)
     plt.savefig(f"{out_path}")
 
 
-def plot(df, df_at_start, df_ml, df_ml_at_start, out_path="plot.png"):
+def plot_box(df, df_ml, label, out_path="box.png"):
+    plt.figure(dpi=300)
+
+    data = pd.concat([df, df_ml])
+
+    sns.boxplot(
+        data=data,
+        y="time_total",
+        x=label,
+        hue=label,
+        legend=False,
+    )
+
+    plt.ylabel("Request Latency (ms)")
+    plt.tight_layout()
+    plt.grid(alpha=0.3)
+    plt.savefig(f"{out_path}")
+
+
+def plot_line(df, df_at_start, df_ml, df_ml_at_start, out_path="plot.png"):
     fig, ax = plt.subplots(figsize=(11, 6))
 
     rel_df_at_start = df_at_start - df["timestamp"].min()
@@ -120,12 +137,11 @@ def plot(df, df_at_start, df_ml, df_ml_at_start, out_path="plot.png"):
 
     ax.set_xlabel("Time since experiment start (s)")
     ax.set_ylabel("Request latency (ms)")
-    ax.set_title("LOREM IPSUM")
     ax.grid(True, alpha=0.3)
 
-    ax.legend(loc="upper left", fontsize=8, ncol=2)
+    ax.legend(title="Machine Learning Usage", loc="upper left", fontsize=8, ncol=2)
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
+    fig.savefig(out_path, dpi=300)
     print(f"Saved plot to {out_path}")
 
 
@@ -144,10 +160,14 @@ def main():
     base_raw, base_stats, base_start = process("base", args.logdir, args.pattern, base_attacker_log)
     ml_raw, ml_stats, ml_start = process("ml", args.logdir_ml, args.pattern, ml_attacker_log)
 
+    label = "Machine Learning Usage"
+    base_raw[label] = "Without ML"
+    ml_raw[label] = "With ML"
 
-    plot_ecdf(base_raw, ml_raw, "/tmp/ecdf.png")
+    plot_ecdf(base_raw, ml_raw, label, "/tmp/ecdf.png")
+    plot_box(base_raw, ml_raw, label, "/tmp/box_plot.png")
 
-    plot(base_stats, base_start, ml_stats, ml_start, "/tmp/plot.png")
+    plot_line(base_stats, base_start, ml_stats, ml_start, "/tmp/plot.png")
 
 
 if __name__ == "__main__":
