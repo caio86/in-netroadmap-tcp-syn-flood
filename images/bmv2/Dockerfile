@@ -9,10 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	iputils-ping \
 	libboost-iostreams-dev \
 	libboost-graph-dev \
-	libgc1c2 \
+	libgc1 \
 	libgmp10 \
 	tcpdump \
 	build-essential \
+    python3-scapy \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=p4c-extractor /usr/local/bin/p4c* /usr/local/bin/
@@ -22,5 +23,8 @@ COPY --from=p4c-extractor /usr/local/lib /usr/local/lib
 RUN ldconfig
 
 RUN p4c --version
+
+RUN mkdir -p /scripts
+COPY mirror.py /scripts
 
 CMD ["/bin/bash"]

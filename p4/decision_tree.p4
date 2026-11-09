@@ -6,6 +6,11 @@ const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> PROTO_INT = 253;
 const bit<8> PROTO_TCP = 6;
 
+/* Mirroring */
+const bit<16> TYPE_MIRROR = 0x88B5;          /* IEEE 802 local experimental EtherType 1 */
+const bit<32> MIRROR_SESSION_ID = 100;       /* must match: mirroring_add 100 <mirror port> */
+const bit<32> PKT_INSTANCE_TYPE_INGRESS_CLONE = 1;   /* v1model/BMv2 instance_type of an I2E clone */
+
 #define MAX_HOPS 10
 
 /*************************************************************************
@@ -34,6 +39,14 @@ header ethernet_h {
     macAddr_v dstAddr;
     macAddr_v srcAddr;
     bit<16>   etherType;
+}
+
+/* Inserted between Ethernet and IPv4 on mirrored copies only.
+   Fields are widened to whole bytes (56 bits total). */
+header mirror_h {
+    ip4Addr_v srcAddr;       /* TCP source port of the original packet      */
+    bit<8>  result;         /* decision-tree class (0..3)                  */
+    bit<16> next_type;      /* original EtherType, so the payload stays parseable */
 }
 
 header ipv4_h {
@@ -102,11 +115,16 @@ struct metadata {
     bit<14> action_select3;
     bit<8> diffserv;
     bit<14> action_select4;
-    bit<3>  result;
+    bit<1>  classified;                 /* 1 if the decision tree ran on this packet */
+    @field_list(1)
+    bit<1>  result;
+    @field_list(1)
+    ip4Addr_v mirror_src_address;
 }
 
 struct headers {
     ethernet_h         ethernet;
+    mirror_h           mirror;
     ipv4_h             ipv4;
     tcp_h              tcp;
     nodeCount_h        nodeCount;
@@ -182,7 +200,8 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-    
+
+    register<bit<1>>(1) enable_detection;
     register<bit<48>>(0xffff) ipi_register;
     register<bit<48>>(0xffff) lpt_register;
 
@@ -271,7 +290,7 @@ control MyIngress(inout headers hdr,
         size = 1024;
     }
 
-    action set_result(bit<3> result) {
+    action set_result(bit<1> result) {
         meta.result = result;
     }
 
@@ -339,8 +358,11 @@ control MyIngress(inout headers hdr,
     apply {
         meta.flowID = 0;
         meta.result = 0;
+        meta.classified = 0;
+        bit<1> enabled;
+        enable_detection.read(enabled, 0);
         if (hdr.ipv4.isValid()) {
-            if (hdr.tcp.isValid() && !hdr.nodeCount.isValid()) {
+            if (enabled == 1 && hdr.tcp.isValid() && !hdr.nodeCount.isValid()) {
                 find_flowID_ipv4();
                 extract_features();
 
@@ -351,12 +373,20 @@ control MyIngress(inout headers hdr,
 
                 classify_exact.apply();
                 resultCounter.count((bit<32>)meta.result);
+                meta.classified = 1;
             }
 
             if (meta.result == 1) {
                 drop();
             } else {
                 ipv4_lpm.apply();
+            }
+
+            /* Mirror only packets that actually went through the tree.
+               (Placement after ipv4_lpm is not required for the TCP ports.) */
+            if (meta.classified == 1) {
+                meta.mirror_src_address = hdr.ipv4.srcAddr;
+                clone_preserving_field_list(CloneType.I2E, MIRROR_SESSION_ID, 1);
             }
         }
     }
@@ -397,6 +427,15 @@ control MyEgress(inout headers hdr,
     }
 
     apply {
+        if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_CLONE) {
+            /* This is the mirrored copy: tag it. The original is untouched. */
+            hdr.mirror.setValid();
+            hdr.mirror.srcAddr     = meta.mirror_src_address;
+            hdr.mirror.result       = (bit<8>)meta.result;
+            hdr.mirror.next_type    = hdr.ethernet.etherType;
+            hdr.ethernet.etherType  = TYPE_MIRROR;
+        }
+
         if (hdr.nodeCount.isValid()) {
             swtrace.apply();
         }
@@ -434,6 +473,7 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
+        packet.emit(hdr.mirror);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.tcp);
         packet.emit(hdr.nodeCount);

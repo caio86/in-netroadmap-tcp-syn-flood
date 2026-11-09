@@ -91,6 +91,27 @@ def orchestrate(nodes_dict, duration):
         f"cat /tmp/compile/table.txt | simple_switch_CLI >> {run_dir}/switch/cli.log 2>&1"
     )
 
+    s1.cmd(
+        f"echo 'register_write MyIngress.enable_detection 0 1' | simple_switch_CLI >> {run_dir}/switch/cli.log 2>&1"
+    )
+
+    s1.cmd("ip link add mir0 type dummy")
+    s1.cmd("ip link set mir0 mtu 9000")
+    s1.cmd("ip link set mir0 promisc on")
+    s1.cmd("ip link set mir0 up")
+    s1.cmd("sysctl -qw net.ipv6.conf.mir0.disable_ipv6=1")
+
+    s1.cmd(f'echo "port_add mir0 99" | simple_switch_CLI >> {run_dir}/switch/cli.log')
+    s1.cmd(
+        f'echo "mirroring_add 100 99" | simple_switch_CLI >> {run_dir}/switch/cli.log'
+    )
+
+    start_bg(
+        s1,
+        f"python3 /scripts/mirror.py -i mir0 -o {run_dir}/switch/classified.csv --malicious-ips /tmp/mal.txt",
+        f"{run_dir}/switch/mirror.log",
+        f"{run_dir}/switch/mirror.pid",
+    )
     ############
     ### BMv2 ###
     ############
