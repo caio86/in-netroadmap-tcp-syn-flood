@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-pandas \
     python3-matplotlib \
+    python3-scapy \
     procps \
     net-tools \
     iputils-ping \

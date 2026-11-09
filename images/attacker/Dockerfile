@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN sed -i 's/geteuid/getppid/' /usr/bin/vlc
 
+RUN pip install --no-cache-dir --break-system-packages slowloris
+
 COPY scripts /scripts
 
 CMD /bin/bash
