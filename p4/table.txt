@@ -21,3 +21,4 @@ table_add feature3_exact set_actionselect3 903->1325 => 5 0
 table_add feature3_exact set_actionselect3 1325->1340 => 6 0
 table_add feature3_exact set_actionselect3 1340->281474976710655 => 7 0
 table_add feature4_exact set_actionselect4 0->255 => 1 0
+table_set_default MyEgress.swtrace MyEgress.add_swtrace 1
